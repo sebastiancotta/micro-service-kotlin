@@ -3,6 +3,11 @@ HELP.md
 /build/
 !gradle/wrapper/gradle-wrapper.jar
 
+# Package Files #
+*.jar
+*.war
+*.ear
+
 ### STS ###
 .apt_generated
 .classpath
