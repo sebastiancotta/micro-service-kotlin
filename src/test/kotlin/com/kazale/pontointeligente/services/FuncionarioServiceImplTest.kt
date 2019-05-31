@@ -1,9 +1,8 @@
-package com.kazale.pontointeligente.services.impl
+package com.kazale.pontointeligente.services
 
 import com.kazale.pontointeligente.documentos.Funcionario
 import com.kazale.pontointeligente.enums.PerfilEnum
 import com.kazale.pontointeligente.repositories.FuncionarioRepository
-import com.kazale.pontointeligente.services.FuncionarioService
 import com.kazale.pontointeligente.utils.SenhaUtils
 import org.junit.Assert
 import org.junit.Before
