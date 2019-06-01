@@ -11,8 +11,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
-import org.springframework.http.ResponseEntity.badRequest
-import org.springframework.http.ResponseEntity.ok
+import org.springframework.http.ResponseEntity.*
 import org.springframework.validation.BindingResult
 import org.springframework.validation.ObjectError
 import org.springframework.web.bind.annotation.*
@@ -43,7 +42,7 @@ class LancamentoController(val lancamentoService: LancamentoService,
         }
 
         var lancamento = converterDtoParaLancamento(lancamentoDto, result)
-        lancamento = lancamentoService.persistir(lancamento)
+        lancamentoService.persistir(lancamento)
         response.data = convertLancamentoDto(lancamento)
         return ok(response)
     }
@@ -55,11 +54,11 @@ class LancamentoController(val lancamentoService: LancamentoService,
 
         if (lancamento == null) {
             response.erros.add("Lancamento não encontrado para o id: $id")
-            ResponseEntity.badRequest().body(response)
+            badRequest().body(response)
         }
 
         response.data = convertLancamentoDto(lancamento)
-        return ResponseEntity.ok(response)
+        return ok(response)
     }
 
     @GetMapping("/funcionario/{funcionarioId}")
@@ -73,6 +72,40 @@ class LancamentoController(val lancamentoService: LancamentoService,
         val lancamentos: Page<Lancamento> = lancamentoService.buscarPorFuncionarioId(funcionarioId, pageRequest)
         val lancamentoDtos: Page<LancamentoDto> = lancamentos.map { lancamento -> convertLancamentoDto(lancamento) }
         response.data = lancamentoDtos
+        return ok(response)
+    }
+
+    @PutMapping(value = "/{id}")
+    fun atualizar(@PathVariable("id") id: String, @Valid @RequestBody lancamentoDto: LancamentoDto,
+                  result: BindingResult): ResponseEntity<Response<LancamentoDto>> {
+        val response: Response<LancamentoDto> = Response<LancamentoDto>()
+        validarFuncionario(lancamentoDto, result)
+        lancamentoDto.id = id
+        var lancamento = converterDtoParaLancamento(lancamentoDto, result)
+
+        if (result.hasErrors()) {
+            for (error in result.allErrors) {
+                response.erros?.add(error.defaultMessage!!)
+                return badRequest().body(response)
+            }
+        }
+
+        lancamento = lancamentoService.persistir(lancamento)
+        response.data = convertLancamentoDto(lancamento)
+        return ok(response)
+    }
+
+    @DeleteMapping(value = "/{id}")
+    fun remover(@PathVariable("id") id: String) : ResponseEntity<Response<String>> {
+        val response: Response<String> = Response<String>()
+        val lancamento = lancamentoService.buscarPorId(id)
+
+        if (lancamento == null) {
+            response.erros.add("Error ao remover lancamento. Registro não encontrado para o id {id}")
+            return ResponseEntity.badRequest().body(response)
+        }
+
+        lancamentoService.remover(id)
         return ResponseEntity.ok(response)
     }
 
@@ -84,7 +117,7 @@ class LancamentoController(val lancamentoService: LancamentoService,
 
         val funcionario = funcionarioService.buscarPorId(lancamentoDto.funcionarioId)
         if (funcionario == null) {
-            result.addError(ObjectError("funcionario", "Funcionario não encontrado. ID inexistente"))
+            result.addError(ObjectError("funcionario", "Funcionario não encontrado. ID inexistente."))
         }
     }
 
@@ -100,9 +133,9 @@ class LancamentoController(val lancamentoService: LancamentoService,
     private fun converterDtoParaLancamento(lancamentoDto: LancamentoDto, result: BindingResult): Lancamento {
 
         if (lancamentoDto.id != null) {
-            val lancamento = lancamentoService.buscarPorId(lancamentoDto.id)
+            val lancamento = lancamentoService.buscarPorId(lancamentoDto.id!!)
             if (lancamento == null){
-                result.addError(ObjectError("lancamento", "Lançamento não encontrado"))
+                result.addError(ObjectError("lancamento", "Lançamento não encontrado."))
             }
         }
 
